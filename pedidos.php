@@ -83,11 +83,24 @@
     </style>
 </head>
 <body>
+    <?php
+        if (isset($_SESSION['message'])) {
+            echo "<div class='alert alert-info'>" . $_SESSION['message'] . "</div>";
+            unset($_SESSION['message']);
+        }
+    ?>
+    <div class="container mt-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="index.php" class="btn btn-primary"><i class="fas fa-home"></i> Página Principal</a>    
+            <a href="logout.php" class="btn btn-danger">Logout</a>
+        </div>
+    </div>
     <div class="container my-5">
         <div class="order-container">
             <div class="logo-container">
                 <img src="imagem/logo/Logotipo.png" alt="Logo da ProPerformance">
             </div>
+            
             <h2>Meus pedidos</h2>
             <p>Bem-vindo, <?php echo htmlspecialchars($nome_utilizador); ?>! Aqui estão seus pedidos:</p>
             <?php if ($results && $results->num_rows > 0): ?>
@@ -136,10 +149,6 @@
             <?php else: ?>
                 <p>Nenhum pedido encontrado.</p>
             <?php endif; ?>
-
-            <div class="text-center mt-4">
-                <a href="index.php" class="btn btn-primary"><i class="fas fa-home"></i> Voltar à Página Inicial</a>
-            </div>
         </div>
     </div>
 

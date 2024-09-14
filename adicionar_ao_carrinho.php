@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'price' => $product_price,
             'quantity' => $product_quantity,
         ];
-
+        
         // Verificar se o carrinho já existe na sessão
         if (isset($_SESSION['cart'])) {
             // Se o produto já estiver no carrinho, atualizar a quantidade

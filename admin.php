@@ -12,11 +12,34 @@
     }
 
     $target_dir = "imagem/produtos/";  
+    
+    function getCategorias($conn) {
+        $sql = "SELECT * FROM Categorias";
+        $result = $conn->query($sql);
+        return $result;
+    }
+
+    //Avisar de estoque baixo
+    $sql = "SELECT * FROM produtos WHERE quantidade <= estoque_minimo";
+    $result = $conn->query($sql);
+
+    if ($result->num_rows > 0){
+        echo "<div class='alert alert-warning mt-4'>Produtos com estoque baixo:</div>";
+        echo "<ul>";
+        while($produto = $result->fetch_assoc()){
+            echo "<li>".htmlspecialchars($produto['nome'])." - apenas ".$produto['quantidade']." unidades restante(s).</li>";
+        }
+        echo "</ul>";
+    }
+
+
     //adicionar os produtos
     if(isset($_POST["add_product"])){
         $nome = $_POST["nome"];
         $preco = $_POST["preco"];
         $quantidade = $_POST["quantidade"];
+        $estoque_minimo = $_POST["estoque_minimo"];
+        $categoria_id = $_POST["categoria_id"];
         $imagens = [];
         
         // Verificar se o campo de imagens está definido e se há imagens para processar
@@ -48,15 +71,38 @@
         }else {
             $imagens_str = ''; // Caso não haja imagens ou o upload falhe
         }    
-        //inserir os dados no banco de dados (incluindo as imagens)
-        $sql = "INSERT INTO Produtos (nome, preco, quantidade, imagens) VALUES ('$nome','$preco','$quantidade','$imagens_str')";
-        if ($conn->query($sql) === TRUE){
+
+        //inserir os dados no banco de dados (incluindo as imagens e categoria)
+        $sql = "INSERT INTO produtos (nome, preco, quantidade, estoque_minimo, imagens, categoria_id) VALUES (?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sdisss", $nome, $preco, $quantidade, $estoque_minimo, $imagens_str, $categoria_id);
+        if ($stmt->execute()){
             echo "Produto adicionado com sucesso!";
             header("Location: admin.php");
             exit();
         }else{
-            echo "Erro: ".$conn->error;
+            echo "Erro: ".$stmt->error;
         }
+        $stmt->close();
+    }
+
+    // Atualizar o estoque mínimo de um produto
+    if (isset($_POST["update_estoque_minimo"])){
+        $produto_id = $_POST["produto_id"];
+        $estoque_minimo = $_POST["estoque_minimo"];
+
+        $sql = "UPDATE produtos SET estoque_minimo = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql); 
+        $stmt->bind_param("ii", $estoque_minimo, $produto_id);
+
+        if($stmt->execute()){
+            echo "Estoque mínimo atualizado com sucesso!";
+            header("Location: admin.php");
+            exit();
+        } else{
+            echo "Erro ao atualizar estoque mínimo do produto: ".$stmt->error;
+        }
+        $stmt->close();
     }
 
     //Excluir Produto
@@ -172,6 +218,22 @@
                 <input type="number" name="quantidade" class="form-control" required>
             </div>
             <div class="mb-3">
+                <label for="estoque_minimo" class="form-label">Estoque Mínimo</label>
+                <input type="number" name="estoque_minimo" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label for="categoria" class="form-label">Categoria</label>
+                <select name="categoria_id" id="form-select" required>
+                    <option value="">Selecione uma categoria</option>
+                    <?php
+                        $categorias = getCategorias($conn);
+                        while($categoria = $categorias->fetch_assoc()){
+                            echo "<option value='".$categoria['id']."'>".$categoria['nome']."</option>";
+                        }
+                    ?>
+                </select>
+            </div>
+            <div class="mb-3">
                 <label for="imagem" class="form-label">Imagens do produto</label>
                 <input type="file" class="form-control" name="imagens[]" multiple>
             </div>
@@ -186,13 +248,15 @@
                     <th>Nome</th>
                     <th>Preço</th>
                     <th>Quantidade</th>
+                    <th>Estoque mínimo</th>
+                    <th>Categoria</th>
                     <th>Imagens</th>
                     <th>Ações</th>
                 </tr>
             </thead>
             <tbody>
                 <?php
-                    $sql = "SELECT * FROM Produtos";
+                    $sql = "SELECT p.*, c.nome as categoria_nome FROM Produtos p LEFT JOIN Categorias c ON p.categoria_id = c.id";
                     $result = $conn->query($sql);
 
                     while($row = $result->fetch_assoc()){
@@ -202,6 +266,14 @@
                                 <td>{$row['nome']}</td>
                                 <td>{$row['preco']}</td>
                                 <td>{$row['quantidade']}</td>
+                                <td>
+                                    <form method='POST' action=''>
+                                        <input type='hidden' name='produto_id' value='{$row['id']}'>
+                                        <input type='number' name='estoque_minimo' value='{$row['estoque_minimo']}' class='form-control' style='width: 80px; display: inline-block;' required>
+                                        <button type='submit' name='update_estoque_minimo' class='btn btn-primary btn-sm'>Atualizar</button>
+                                    </form>
+                                </td>
+                                <td>".htmlspecialchars($row["categoria_nome"])."</td>
                                 <td>";
                                     // Exibir as imagens associadas ao produto
                                     $imagens = explode(",",$row["imagens"]); 

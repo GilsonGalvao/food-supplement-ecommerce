@@ -25,8 +25,10 @@
             $_SESSION["user"] = $user;
 
             if($user["tipo"] == "admin"){
+                $_SESSION['message'] = "Login realizado com sucesso como administrador.";
                 header("Location: admin.php");
             } else {
+                $_SESSION['message'] = "Login realizado com sucesso.";
                 header("Location: pedidos.php");
             }
             exit();

@@ -19,6 +19,45 @@
     }
 
     $totalItensCarrinho = calcularTotalItensCarrinho();
+    
+    if (isset($_SESSION['message'])) {
+        echo "<div class='alert alert-info'>" . $_SESSION['message'] . "</div>";
+        unset($_SESSION['message']);
+    }
+
+    $categoria_id = isset($_GET['categoria']) ? $_GET['categoria'] : '';
+    $preco_min = isset($_GET['preco_min']) ? $_GET['preco_min'] : '';
+    $preco_max = isset($_GET['preco_max']) ? $_GET['preco_max'] : '';
+    
+    $sql = "SELECT * FROM Produtos WHERE 1=1"; // 1=1 é um truque para facilitar a concatenação de condições
+    
+    $params = [];
+    $types = '';
+
+    if (!empty($categoria_id)){
+        $sql .= " AND categoria_id = ?";
+        $params[] = $categoria_id;
+        $types .= 'i';  // 'i' para integer
+    }
+    if (!empty($preco_min)) {
+        $sql .= " AND preco >= ?";
+        $params[] = $preco_min;
+        $types .= 'd';  // 'd' para double
+    }
+    if (!empty($preco_max)) {
+        $sql .= " AND preco <= ?";
+        $params[] = $preco_max;
+        $types .= 'd';  // 'd' para double
+    }
+    $stmt = $conn->prepare($sql);
+    
+    // Adicionar parâmetros ao bind dependendo dos filtros aplicados
+    if ($types) {
+        $stmt->bind_param($types, ...$params);
+    }
+
+    $stmt->execute();
+    $result = $stmt->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -44,7 +83,7 @@
         .product-card img{
             width: 100%;
             height: 300px;
-            object-fit:contain;
+            object-fit: cover;
         }
         .product-card .card-body{
             flex-grow: 1;
@@ -68,7 +107,7 @@
 </head>
 <body>
     <header class="bg-dark text-white p-3">
-        <div class="container">
+        <div class="container-fluid">
             <div class="row align-items-center">
                 <div class="col-12 col-md-4 text-center text-md-start">          
                     <img src="imagem/logo/Logotipo.png" alt="Logo da empresa" width="200" height="100" class="me-3">  
@@ -80,7 +119,7 @@
                     <a href="login.php" class="btn btn-light me-2">
                         <i class="fas fa-user"></i> Login
                     </a>
-                    <a href="visualizar_carrinho.php" class="btn btn-light">
+                    <a href="visualizar_carrinho.php" class="btn btn-light me-2">
                         <i class="fas fa-shopping-cart"></i> Carrinho (<span id="cart-count"><?php echo $totalItensCarrinho; ?></span>)
                     </a>
                 </div> 
@@ -90,14 +129,37 @@
 
     <main class="container my-5">
         <h2 class="text-center mb-4">Produtos Disponíveis</h2>
+        <form action="index.php" method="GET" class="mb-4">     
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <select name="categoria" id="categoria" class="form-select">
+                        <option value="">Todas as categorias</option>
+                        <?php
+                            $categoria_query = "SELECT * FROM Categorias";
+                            $categoria_result = $conn->query($categoria_query);
+                            while($categoria = $categoria_result->fetch_assoc()){
+                                $selected = ($categoria['id'] == $categoria_id) ? 'selected' : '';
+                                echo "<option value='" .$categoria['id']."' $selected>".htmlspecialchars($categoria['nome']) ."</option>";
+                            }
+                        ?>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <input type="number" name="preco_min" class="form-control" placeholder="Preço mínimo">
+                </div>
+                <div class="col-md-3">
+                    <input type="number" name="preco_max" class="form-control" placeholder="Preço Máximo">
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary">Filtrar</button>
+                </div>
+            </div>
+        </form> 
         <div class="row">
-            <?php 
-            $sql = "SELECT * FROM Produtos";
-            $result = $conn->query($sql);
-            
+            <?php             
             while($row = $result->fetch_assoc()){
                 echo 
-                "<div class='col-md-4 mb-4'>
+                "<div class='col-6 col-md-4 col-lg-3 mb-4'>
                     <div class='card product-card'>";
                     $imagens = explode(",", $row["imagens"]);
                     if (count($imagens) > 1){
