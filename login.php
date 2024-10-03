@@ -8,12 +8,14 @@
 
     $error = "";
 
-    //Verificar se o formulário foi enviado
     if($_SERVER["REQUEST_METHOD"] == "POST"){
-        $username = htmlspecialchars(trim($_POST["username"]));
-        $password = htmlspecialchars(trim($_POST["password"]));
+        $username = trim(htmlspecialchars($_POST["username"]));
+        $password = htmlspecialchars($_POST["password"]);
 
-        // verificar as credenciais do usuário
+        if (empty($username) || empty($password)){
+            $error = "Nome do usuário e senha são obrigatórios.";
+        }
+
         $sql = "SELECT * FROM Utilizadores WHERE nome = ? AND senha = ?";
         $stmt = $conn->prepare($sql); 
         $stmt->bind_param("ss", $username, $password);
@@ -104,7 +106,7 @@
                     <?php echo $error; ?>
                 </div>
             <?php endif; ?>
-            <form method="POST" action="">
+            <form method="POST" action="" onsubmit="return validateLoginForm();">
                 <div class="mb-3">
                     <label for="username" class="form-label">Usuário</label>
                     <input type="text" class="form-control" id="username" name="username" autocomplete="off">
@@ -119,7 +121,17 @@
             <a href="index.php" class="btn btn-secondary mt-3"><i class="fas fa-home"></i> Voltar</a>
         </div>
     </div>
-
+    <script>
+        function validateLoginForm(){
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
+            if (!username || !password) {
+                alert('Por favor, preencha todos os campos.');
+                return false;
+            }
+            return true;
+        }
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

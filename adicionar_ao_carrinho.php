@@ -33,10 +33,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (isset($_SESSION['cart'])) {
             // Se o produto já estiver no carrinho, atualizar a quantidade
             $found = false;
-            foreach ($_SESSION['cart'] as &$item) {
+            foreach ($_SESSION['cart'] as $key => $item) {
                 if ($item['id'] == $product_id) {
+                    //adicionar a quantidade apenas se houver estoque suficiente
                     if ($item['quantity'] + $product_quantity <= $produto['quantidade']) {
-                        $item['quantity'] += $product_quantity;
+                        $_SESSION['cart'][$key]['quantity'] += $product_quantity;
                     } else {
                         echo json_encode(['success' => false, 'message' => 'Estoque insuficiente']);
                         exit;

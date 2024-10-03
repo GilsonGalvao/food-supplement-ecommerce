@@ -1,5 +1,19 @@
 <?php
     session_start();
+
+    $tempoExpiracao = 1800;
+    if(isset($_SESSION["ultimo_acesso"])){
+        $inatividade = time() - $_SESSION["ultimo_acesso"];
+
+        if($inatividade > $tempoExpiracao){
+            session_unset();
+            session_destroy();
+            header("Location: login.php?message=Session expired. Please log in again.");
+            exit();
+        }
+    }
+    $_SESSION["ultimo_acesso"] = time();
+
     $conn = new mysqli("localhost","root","nova_senha","loja_suplementos");
 
     if($conn->connect_error){

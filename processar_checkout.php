@@ -1,5 +1,19 @@
 <?php
     session_start();
+
+    $tempoExpiracao = 1800;
+    if(isset($_SESSION["ultimo_acesso"])){
+        $inatividade = time() - $_SESSION["ultimo_acesso"];
+
+        if($inatividade > $tempoExpiracao){
+            session_unset();
+            session_destroy();
+            header("Location: login.php?message=Session expired. Please log in again.");
+            exit();
+        }
+    }
+    $_SESSION["ultimo_acesso"] = time();
+
     $conn = new mysqli("localhost", "root", "nova_senha", "loja_suplementos");
 
     if ($conn->connect_error) {
@@ -163,7 +177,25 @@
             </div>
         <?php endif; ?>
     </div>
+    <script>
+        let tempoExpiracao = 30 * 60 * 1000;
 
+        function autoLogout(){
+            alert("Sua sessão expirou devido à inatividade.");
+            window.location.href = "logout.php";
+        }
+
+        let timer = setTimeout(autoLogout, tempoExpiracao);
+
+        function resetTimer(){
+            clearTimeout(timer);
+            timer = setTimeout(autoLogout, tempoExpiracao);
+        }
+
+        window.onload = resetTimer;
+        window.onmousemove = resetTimer;
+        window.onkeypress = resetTimer;
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
 </body>

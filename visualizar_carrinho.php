@@ -1,7 +1,3 @@
-<?php
-    session_start();
-?>
-
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -28,6 +24,12 @@
     <div class="container my-5">
         <h2 class="text-center mb-4">Carrinho de Compras</h2>
         <form method="POST" action="atualizar_carrinho.php">
+        <?php
+            session_start();
+            $total_geral = 0;
+
+            if (isset($_SESSION["cart"]) && !empty($_SESSION["cart"])):
+        ?>            
             <table class="table table-bordered cart-table">
                 <thead class="table-light">
                 <tr>
@@ -39,9 +41,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                    <?php if (!empty($_SESSION["cart"])): ?>
-                        <?php $total_geral = 0; ?>
-                        <?php foreach($_SESSION["cart"] as $index => $item): ?>
+                    <?php foreach($_SESSION["cart"] as $index => $item): ?>
                             <tr>
                                 <td><?php echo htmlspecialchars($item["name"]); ?></td>
                                 <td>€ <?php echo number_format($item["price"], 2); ?></td>
@@ -67,7 +67,7 @@
                 </tbody>
             </table>
             <div class="text-end">
-                <button type="submit" name="atualizar" class="btn btn-warning">Atualizar Carrinho</button>
+                <button type="submit" name="atualizar" class="btn btn-primary">Atualizar Carrinho</button>
                 <a href="index.php" class="btn btn-primary">Continuar Comprando</a>
                 <?php if(!empty($_SESSION["cart"])): ?>
                     <a href="checkout.php" class="btn btn-success">Finalizar Compra</a>

@@ -116,13 +116,25 @@
                     <h1 class="mb-0">Seu suplemento está aqui!</h1>
                 </div>
                 <div class="col-12 col-md-4 text-center text-md-end mt-3 mt-md-0">
-                    <a href="login.php" class="btn btn-light me-2">
-                        <i class="fas fa-user"></i> Login
+                    <?php if (isset($_SESSION['user'])): ?>
+                        <span class="text-light">Bem-vindo, <?php echo htmlspecialchars($_SESSION['user']['nome']); ?>!</span>
+                        <a href="logout.php" class="btn btn-light me-2">
+                            <i class="fas fa-sign-out-alt"></i> Sair
+                        </a>
+                    <?php else: ?>
+                        <a href="login.php" class="btn btn-light me-2">
+                            <i class="fas fa-user"></i> Login
+                        </a>
+                    <?php endif; ?>
+                       
+                    <a href="register.php" class="btn btn-light me-2 mb-2">
+                        <i class="fas fa-user-plus"></i> Registrar-se
                     </a>
-                    <a href="visualizar_carrinho.php" class="btn btn-light me-2">
+
+                    <a href="visualizar_carrinho.php" class="btn btn-light me-2 mb-2">
                         <i class="fas fa-shopping-cart"></i> Carrinho (<span id="cart-count"><?php echo $totalItensCarrinho; ?></span>)
                     </a>
-                </div> 
+                </div>  
             </div>          
         </div>
     </header>
